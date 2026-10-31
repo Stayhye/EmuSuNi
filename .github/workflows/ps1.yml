@@ -21,7 +21,7 @@ jobs:
           df -h /
 
       - name: Preparar entorno (solo PS1)
-        run: sudo -i bash "$GITHUB_WORKSPACE/scripts/setup-ps1.sh"
+        run: sudo -i bash "$GITHUB_WORKSPACE/scripts/build-ps1-core.sh"
 
       - name: Compilar
         run: >
