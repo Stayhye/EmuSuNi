@@ -20,16 +20,22 @@ jobs:
       - name: Install dependencies (LLVM, Clang, LLD)
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang lld cmake ninja-build
+          sudo apt-get install -y clang lld cmake ninja-build git
 
-      - name: Set up OpenOrbis Toolchain environment
+      - name: Set up OpenOrbis Toolchain & Core Sources
         run: |
-          # Set up target directories and clone or configure OpenOrbis if necessary
           echo "Setting up workspace directories..."
           mkdir -p $HOME/src
           
-          # If you manage OpenOrbis or PacBrew locally, configure paths here:
-          # echo "OO_PS4_TOOLCHAIN=$HOME/openorbis" >> $GITHUB_ENV
+          # Clone required core repositories expected by CMakeLists.txt and build scripts
+          if [ ! -d "$HOME/src/mupen64plus-next" ]; then
+            git clone --depth 1 https://github.com/mupen64plus/mupen64plus-next.git $HOME/src/mupen64plus-next
+          fi
+          
+          # If other optional or required core sources (like snes9x or fceumm) need cloning, add them here:
+          # if [ ! -d "$HOME/src/snes9x" ]; then
+          #   git clone --depth 1 https://github.com/snes9xemu/snes9x.git $HOME/src/snes9x
+          # fi
 
       - name: Run Build Script
         run: |
