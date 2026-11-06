@@ -43,9 +43,9 @@ jobs:
             git clone --depth 1 https://github.com/libretro/mupen64plus-libretro-nx.git $HOME/src/mupen64plus-next
           fi
 
-          # Snes9x (SNES)
+          # Snes9x (SNES) - Corrected repository URL
           if [ ! -d "$HOME/src/snes9x/.git" ]; then
-            git clone --depth 1 https://github.com/snes9xemu/snes9x.git $HOME/src/snes9x
+            git clone --depth 1 https://github.com/libretro/snes9x.git $HOME/src/snes9x
           fi
 
           # FCEUmm (NES)
