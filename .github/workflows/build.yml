@@ -17,24 +17,13 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install Clang 21 and build dependencies
+      - name: Install build tools and host dependencies
         run: |
           export DEBIAN_FRONTEND=noninteractive
           sudo apt-get update
-          sudo apt-get install -y wget software-properties-common gnupg curl
-          
-          # Add the missing LLVM GPG key to trusted keyring
-          wget -qO- https://apt.llvm.org/llvm-snapshot.gpg_key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/llvm.gpg > /dev/null
-          
-          # Add LLVM official repository for Clang 21
-          sudo add-apt-repository "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-21 main"
-          sudo apt-get update
-          
           sudo apt-get install -y \
-            clang-21 lld-21 llvm-21 \
-            cmake ninja-build \
-            glslang-tools \
-            git python3 zip
+            wget curl git python3 zip cmake ninja-build \
+            clang lld llvm glslang-tools
 
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -42,41 +31,47 @@ jobs:
           key: ${{ github.job }}-${{ runner.os }}
           max-size: 500M
 
-      - name: Clone core source dependencies
+      - name: Clone all required core and library dependencies
         run: |
           export GIT_TERMINAL_PROMPT=0
           mkdir -p $HOME/src
-          
-          # Mupen64Plus-Next (N64)
-          if [ ! -d "$HOME/src/mupen64plus-next/.git" ]; then
-            git clone --depth 1 https://github.com/libretro/mupen64plus-libretro-nx.git $HOME/src/mupen64plus-next
-          fi
+          mkdir -p $HOME/dolphinps4-build/src
 
-          # Snes9x (SNES)
+          # 1. Snes9x (SNES)
           if [ ! -d "$HOME/src/snes9x/.git" ]; then
             git clone --depth 1 https://github.com/libretro/snes9x.git $HOME/src/snes9x
           fi
 
-          # FCEUmm (NES)
+          # 2. FCEUmm (NES)
           if [ ! -d "$HOME/src/fceumm/.git" ]; then
             git clone --depth 1 https://github.com/libretro/libretro-fceumm.git $HOME/src/fceumm
           fi
 
-          # Dear ImGui
+          # 3. Dear ImGui (v1.92.2b)
           if [ ! -d "$HOME/src/imgui/.git" ]; then
             git clone --depth 1 -b 1.92.2b https://github.com/ocornut/imgui.git $HOME/src/imgui || \
             git clone --depth 1 https://github.com/ocornut/imgui.git $HOME/src/imgui
           fi
 
-          # rcheevos (RetroAchievements)
+          # 4. Mupen64Plus-Next (N64)
+          if [ ! -d "$HOME/src/mupen64plus-next/.git" ]; then
+            git clone --depth 1 https://github.com/libretro/mupen64plus-libretro-nx.git $HOME/src/mupen64plus-next
+          fi
+
+          # 5. rcheevos (RetroAchievements v12.5.0)
           if [ ! -d "$HOME/src/rcheevos/.git" ]; then
             git clone --depth 1 -b v12.5.0 https://github.com/RetroAchievements/rcheevos.git $HOME/src/rcheevos || \
             git clone --depth 1 https://github.com/RetroAchievements/rcheevos.git $HOME/src/rcheevos
           fi
 
-          # libchdr
+          # 6. libchdr
           if [ ! -d "$HOME/src/libchdr/.git" ]; then
             git clone --depth 1 https://github.com/rtissera/libchdr.git $HOME/src/libchdr
+          fi
+
+          # 7. Mesa / Vulkan headers (required by CMakeLists.txt for DolphinPS4 / RADV)
+          if [ ! -d "$HOME/dolphinps4-build/src/mesa/.git" ]; then
+            git clone --depth 1 https://github.com/mesa3d/mesa.git $HOME/dolphinps4-build/src/mesa
           fi
 
       - name: Setup OpenOrbis SDK Environment
@@ -92,7 +87,8 @@ jobs:
           chmod +x scripts/*.sh
           export CMAKE_C_COMPILER_LAUNCHER=ccache
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
-          export PATH="/usr/lib/llvm-21/bin:$PATH"
+          
+          # Execute the primary build script provided by the project
           bash scripts/build.sh with-saturn with-gblink with-openbor
 
       - name: Package PKG File
