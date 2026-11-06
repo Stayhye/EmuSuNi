@@ -1,52 +1,43 @@
-name: EmuSuNi solo PS1
+name: Build EmuSuNi PS4
 
 on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 355
+    runs-on: ubuntu-latest
+    # If your team uses a specific Docker container containing the OpenOrbis SDK / PacBrew runtime, 
+    # specify it here. Otherwise, you can install the toolchain in the steps below.
+    container:
+      image: ghcr.io/openorbis/ps4-toolchain:latest
+
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Permisos de los scripts
-        run: |
-          chmod +x scripts/*.sh toolchain/*.sh 2>/dev/null || true
-          find scripts toolchain -type f \( -name '*.sh' -o -path '*/bin/*' \) -exec chmod +x {} +
-
-      - name: Liberar disco
-        run: |
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/share/boost
-          df -h /
-
-      - name: Preparar entorno (solo PS1)
-        run: sudo -i bash "$GITHUB_WORKSPACE/scripts/build-ps1-core.sh"
-
-      - name: Compilar
-        run: >
-          sudo -i env EMUSUNI_VERSION=00.99 bash "$GITHUB_WORKSPACE/scripts/build.sh"
-          no-n64 no-nds no-psp no-dc no-sega no-arcade no-3ds no-pce
-
-      - name: Empaquetar
-        run: |
-          # Otro identificador y titulo: se instala al lado del EmuSuNi oficial (solo en esta copia).
-          sed -i 's/TITLE_ID=EMSN00001; TITLE="EmuSuNi"/TITLE_ID=EMSN00099; TITLE="EmuSuNi PS1"/' scripts/package.sh
-          grep -n 'TITLE_ID=' scripts/package.sh
-          grep -q 'TITLE_ID=EMSN00099' scripts/package.sh
-          sudo -i env EMUSUNI_VERSION=00.99 bash "$GITHUB_WORKSPACE/scripts/package.sh" 00.99
-
-      - name: Recoger resultados
-        if: always()
-        run: |
-          mkdir -p "$GITHUB_WORKSPACE/salida"
-          sudo cp -r /root/emusuni-build/out/. "$GITHUB_WORKSPACE/salida/" 2>/dev/null || true
-          sudo find /root/emusuni-build -name '*.log' -exec cp {} "$GITHUB_WORKSPACE/salida/" \; 2>/dev/null || true
-          sudo chown -R "$(id -u):$(id -g)" "$GITHUB_WORKSPACE/salida"
-          ls -la "$GITHUB_WORKSPACE/salida"
-
-      - uses: actions/upload-artifact@v4
-        if: always()
+      - name: Checkout repository with submodules
+        uses: actions/checkout@v4
         with:
-          name: emusuni-ps1
-          path: salida/
+          submodules: recursive
+
+      - name: Set up build environment
+        run: |
+          echo "Setting up workspace directories..."
+          mkdir -p $HOME/src
+          # Link or place required source dependencies if they aren't submodules
+          
+      - name: Run Build Script
+        run: |
+          chmod +x scripts/*.sh
+          # Execute the primary build script configured in CMakeLists.txt
+          ./scripts/build.sh
+          
+      - name: Upload Eboot / PKG Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: emusuni-ps4-package
+          path: |
+            build/eboot.bin
+            build/*.pkg
+            build/emusuni.elf
