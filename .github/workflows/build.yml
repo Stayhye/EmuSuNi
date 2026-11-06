@@ -85,8 +85,14 @@ jobs:
       - name: Run EmuSuNi Build Script
         run: |
           chmod +x scripts/*.sh
+          export OPENORBIS=$HOME/openorbis
+          export PATH="$OPENORBIS/bin:$PATH"
+          export CC=clang
+          export CXX=clang++
           export CMAKE_C_COMPILER_LAUNCHER=ccache
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          
+          # Pass environment variables and run build script
           bash scripts/build.sh with-saturn with-gblink with-openbor
 
       - name: Package PKG File
