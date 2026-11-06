@@ -12,41 +12,81 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository with submodules
+      - name: Checkout EmuSuNi repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: Install dependencies (LLVM, Clang, LLD)
+      - name: Install build tools and host dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang lld cmake ninja-build git
+          sudo apt-get install -y \
+            clang-21 lld-21 llvm-21 \
+            clang lld llvm \
+            cmake ninja-build \
+            glslang-dev glslang-tools \
+            git python3 curl zip
 
-      - name: Set up OpenOrbis Toolchain & Core Sources
+      - name: Clone core source dependencies
         run: |
-          echo "Setting up workspace directories..."
           mkdir -p $HOME/src
           
-          # Clone required core repositories expected by CMakeLists.txt and build scripts
+          # Mupen64Plus-Next (N64)
           if [ ! -d "$HOME/src/mupen64plus-next" ]; then
-            git clone --depth 1 https://github.com/mupen64plus/mupen64plus-next.git $HOME/src/mupen64plus-next
+            git clone --depth 1 https://github.com/libretro/mupen64plus-libretro-nx.git $HOME/src/mupen64plus-next
           fi
-          
-          # If other optional or required core sources (like snes9x or fceumm) need cloning, add them here:
-          # if [ ! -d "$HOME/src/snes9x" ]; then
-          #   git clone --depth 1 https://github.com/snes9xemu/snes9x.git $HOME/src/snes9x
-          # fi
 
-      - name: Run Build Script
+          # Snes9x (SNES)
+          if [ ! -d "$HOME/src/snes9x" ]; then
+            git clone --depth 1 https://github.com/snes9xemu/snes9x.git $HOME/src/snes9x
+          fi
+
+          # FCEUmm (NES)
+          if [ ! -d "$HOME/src/fceumm" ]; then
+            git clone --depth 1 https://github.com/libretro/libretro-fceumm.git $HOME/src/fceumm
+          fi
+
+          # Dear ImGui
+          if [ ! -d "$HOME/src/imgui" ]; then
+            git clone --depth 1 -b 1.92.2b https://github.com/ocornut/imgui.git $HOME/src/imgui || \
+            git clone --depth 1 https://github.com/ocornut/imgui.git $HOME/src/imgui
+          fi
+
+          # rcheevos (RetroAchievements)
+          if [ ! -d "$HOME/src/rcheevos" ]; then
+            git clone --depth 1 -b v12.5.0 https://github.com/RetroAchievements/rcheevos.git $HOME/src/rcheevos || \
+            git clone --depth 1 https://github.com/RetroAchievements/rcheevos.git $HOME/src/rcheevos
+          fi
+
+          # libchdr
+          if [ ! -d "$HOME/src/libchdr" ]; then
+            git clone --depth 1 https://github.com/rtissera/libchdr.git $HOME/src/libchdr
+          fi
+
+      - name: Setup OpenOrbis SDK Environment
+        run: |
+          if [ ! -d "$HOME/openorbis" ]; then
+            git clone --depth 1 https://github.com/OpenOrbis/OpenOrbis-PS4-Toolchain.git $HOME/openorbis
+          fi
+          echo "OPENORBIS=$HOME/openorbis" >> $GITHUB_ENV
+
+      - name: Run EmuSuNi Build Script
         run: |
           chmod +x scripts/*.sh
-          ./scripts/build.sh
-          
-      - name: Upload Eboot / PKG Artifacts
+          # Executes the build script with optional cores enabled
+          bash scripts/build.sh with-saturn with-gblink with-openbor
+
+      - name: Package PKG File
+        run: |
+          if [ -f "scripts/package.sh" ]; then
+            bash scripts/package.sh 00.23
+          fi
+
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: emusuni-ps4-package
+          name: emusuni-ps4-build
           path: |
-            build/eboot.bin
-            build/*.pkg
+            out/*.pkg
+            build/emusuni_eboot/eboot.bin
             build/emusuni.elf
