@@ -37,19 +37,19 @@ jobs:
           mkdir -p $HOME/src
           mkdir -p $HOME/dolphinps4-build/src
 
-          # 1. Snes9x (SNES)
+          # 1. Snes9x (SNES)[cite: 1]
           if [ ! -d "$HOME/src/snes9x/.git" ]; then
             git clone --depth 1 https://github.com/libretro/snes9x.git $HOME/src/snes9x
           fi
 
-          # 2. FCEUmm (NES)
+          # 2. FCEUmm (NES)[cite: 1]
           if [ ! -d "$HOME/src/fceumm/.git" ]; then
             git clone --depth 1 https://github.com/libretro/libretro-fceumm.git $HOME/src/fceumm
           fi
 
-          # 3. Dear ImGui (v1.92.2b)
+          # 3. Dear ImGui (v1.92.2b)[cite: 1]
           if [ ! -d "$HOME/src/imgui/.git" ]; then
-            git clone --depth 1 -b 1.92.2b https://github.com/ocornut/imgui.git $HOME/src/imgui || \
+            git clone --depth 1 -b v1.92.2b https://github.com/ocornut/imgui.git $HOME/src/imgui || \
             git clone --depth 1 https://github.com/ocornut/imgui.git $HOME/src/imgui
           fi
 
@@ -58,18 +58,18 @@ jobs:
             git clone --depth 1 https://github.com/libretro/mupen64plus-libretro-nx.git $HOME/src/mupen64plus-next
           fi
 
-          # 5. rcheevos (RetroAchievements v12.5.0)
+          # 5. rcheevos (RetroAchievements v12.5.0)[cite: 1]
           if [ ! -d "$HOME/src/rcheevos/.git" ]; then
             git clone --depth 1 -b v12.5.0 https://github.com/RetroAchievements/rcheevos.git $HOME/src/rcheevos || \
             git clone --depth 1 https://github.com/RetroAchievements/rcheevos.git $HOME/src/rcheevos
           fi
 
-          # 6. libchdr
+          # 6. libchdr (Explicit public URL)[cite: 1]
           if [ ! -d "$HOME/src/libchdr/.git" ]; then
             git clone --depth 1 https://github.com/rtissera/libchdr.git $HOME/src/libchdr
           fi
 
-          # 7. Mesa / Vulkan headers (required by CMakeLists.txt for DolphinPS4 / RADV)
+          # 7. Mesa / Vulkan headers[cite: 1]
           if [ ! -d "$HOME/dolphinps4-build/src/mesa/.git" ]; then
             git clone --depth 1 https://github.com/mesa3d/mesa.git $HOME/dolphinps4-build/src/mesa
           fi
