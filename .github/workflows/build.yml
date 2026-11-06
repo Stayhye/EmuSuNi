@@ -27,7 +27,24 @@ jobs:
             glslang-tools \
             git python3 curl zip
 
-      - name: Clone core source dependencies
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ github.job }}-${{ runner.os }}
+          max-size: 500M
+
+      - name: Cache core source dependencies
+        id: cache-src
+        uses: actions/cache@v4
+        with:
+          path: |
+            $HOME/src
+            $HOME/openorbis
+          key: ${{ runner.os }}-emusuni-deps-${{ hashFiles('CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-emusuni-deps-
+
+      - name: Clone core source dependencies (if not cached)
         run: |
           mkdir -p $HOME/src
           
@@ -73,6 +90,9 @@ jobs:
       - name: Run EmuSuNi Build Script
         run: |
           chmod +x scripts/*.sh
+          # Pass ccache compiler launchers to CMake via environment or arguments if needed
+          export CMAKE_C_COMPILER_LAUNCHER=ccache
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
           bash scripts/build.sh with-saturn with-gblink with-openbor
 
       - name: Package PKG File
