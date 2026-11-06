@@ -21,18 +21,20 @@ jobs:
         run: |
           export DEBIAN_FRONTEND=noninteractive
           sudo apt-get update
-          sudo apt-get install -y wget software-properties-common gnupg
+          sudo apt-get install -y wget software-properties-common gnupg curl
           
-          # Add LLVM official repository to get Clang 21
-          wget -O - https://apt.llvm.org/llvm-snapshot.gpg_key | sudo apt-key add - || true
-          sudo add-apt-repository "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-21 main" || true
+          # Add the missing LLVM GPG key to trusted keyring
+          wget -qO- https://apt.llvm.org/llvm-snapshot.gpg_key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/llvm.gpg > /dev/null
+          
+          # Add LLVM official repository for Clang 21
+          sudo add-apt-repository "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-21 main"
           sudo apt-get update
           
           sudo apt-get install -y \
             clang-21 lld-21 llvm-21 \
             cmake ninja-build \
             glslang-tools \
-            git python3 curl zip
+            git python3 zip
 
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
