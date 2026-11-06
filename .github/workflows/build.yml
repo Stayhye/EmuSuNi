@@ -19,12 +19,12 @@ jobs:
 
       - name: Install build tools and host dependencies
         run: |
+          export DEBIAN_FRONTEND=noninteractive
           sudo apt-get update
           sudo apt-get install -y \
-            clang-21 lld-21 llvm-21 \
             clang lld llvm \
             cmake ninja-build \
-            glslang-dev glslang-tools \
+            glslang-tools \
             git python3 curl zip
 
       - name: Clone core source dependencies
@@ -73,7 +73,6 @@ jobs:
       - name: Run EmuSuNi Build Script
         run: |
           chmod +x scripts/*.sh
-          # Executes the build script with optional cores enabled
           bash scripts/build.sh with-saturn with-gblink with-openbor
 
       - name: Package PKG File
