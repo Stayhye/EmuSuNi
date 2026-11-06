@@ -33,19 +33,9 @@ jobs:
           key: ${{ github.job }}-${{ runner.os }}
           max-size: 500M
 
-      - name: Cache core source dependencies
-        id: cache-src
-        uses: actions/cache@v4
-        with:
-          path: |
-            $HOME/src
-            $HOME/openorbis
-          key: ${{ runner.os }}-emusuni-deps-${{ hashFiles('CMakeLists.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-emusuni-deps-
-
-      - name: Clone core source dependencies (if not cached)
+      - name: Clone core source dependencies
         run: |
+          export GIT_TERMINAL_PROMPT=0
           mkdir -p $HOME/src
           
           # Mupen64Plus-Next (N64)
@@ -82,6 +72,7 @@ jobs:
 
       - name: Setup OpenOrbis SDK Environment
         run: |
+          export GIT_TERMINAL_PROMPT=0
           if [ ! -d "$HOME/openorbis/.git" ]; then
             git clone --depth 1 https://github.com/OpenOrbis/OpenOrbis-PS4-Toolchain.git $HOME/openorbis
           fi
