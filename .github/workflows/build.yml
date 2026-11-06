@@ -17,12 +17,19 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install build tools and host dependencies
+      - name: Install Clang 21 and build dependencies
         run: |
           export DEBIAN_FRONTEND=noninteractive
           sudo apt-get update
+          sudo apt-get install -y wget software-properties-common gnupg
+          
+          # Add LLVM official repository to get Clang 21
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg_key | sudo apt-key add - || true
+          sudo add-apt-repository "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-21 main" || true
+          sudo apt-get update
+          
           sudo apt-get install -y \
-            clang lld llvm \
+            clang-21 lld-21 llvm-21 \
             cmake ninja-build \
             glslang-tools \
             git python3 curl zip
@@ -43,7 +50,7 @@ jobs:
             git clone --depth 1 https://github.com/libretro/mupen64plus-libretro-nx.git $HOME/src/mupen64plus-next
           fi
 
-          # Snes9x (SNES) - Corrected repository URL
+          # Snes9x (SNES)
           if [ ! -d "$HOME/src/snes9x/.git" ]; then
             git clone --depth 1 https://github.com/libretro/snes9x.git $HOME/src/snes9x
           fi
@@ -83,6 +90,7 @@ jobs:
           chmod +x scripts/*.sh
           export CMAKE_C_COMPILER_LAUNCHER=ccache
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/llvm-21/bin:$PATH"
           bash scripts/build.sh with-saturn with-gblink with-openbor
 
       - name: Package PKG File
