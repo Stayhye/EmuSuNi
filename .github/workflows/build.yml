@@ -21,7 +21,6 @@ jobs:
         run: |
           export DEBIAN_FRONTEND=noninteractive
           sudo apt-get update
-          # Only install what's strictly necessary; git, cmake, and python are pre-installed on runners
           sudo apt-get install -y --no-install-recommends \
             wget curl zip glslang-tools clang lld llvm
 
@@ -37,17 +36,17 @@ jobs:
           mkdir -p $HOME/src
           mkdir -p $HOME/dolphinps4-build/src
 
-          # 1. Snes9x (SNES)[cite: 1]
+          # 1. Snes9x (SNES)
           if [ ! -d "$HOME/src/snes9x/.git" ]; then
             git clone --depth 1 https://github.com/libretro/snes9x.git $HOME/src/snes9x
           fi
 
-          # 2. FCEUmm (NES)[cite: 1]
+          # 2. FCEUmm (NES)
           if [ ! -d "$HOME/src/fceumm/.git" ]; then
             git clone --depth 1 https://github.com/libretro/libretro-fceumm.git $HOME/src/fceumm
           fi
 
-          # 3. Dear ImGui (v1.92.2b)[cite: 1]
+          # 3. Dear ImGui (v1.92.2b)
           if [ ! -d "$HOME/src/imgui/.git" ]; then
             git clone --depth 1 -b v1.92.2b https://github.com/ocornut/imgui.git $HOME/src/imgui || \
             git clone --depth 1 https://github.com/ocornut/imgui.git $HOME/src/imgui
@@ -58,18 +57,18 @@ jobs:
             git clone --depth 1 https://github.com/libretro/mupen64plus-libretro-nx.git $HOME/src/mupen64plus-next
           fi
 
-          # 5. rcheevos (RetroAchievements v12.5.0)[cite: 1]
+          # 5. rcheevos (RetroAchievements v12.5.0)
           if [ ! -d "$HOME/src/rcheevos/.git" ]; then
             git clone --depth 1 -b v12.5.0 https://github.com/RetroAchievements/rcheevos.git $HOME/src/rcheevos || \
             git clone --depth 1 https://github.com/RetroAchievements/rcheevos.git $HOME/src/rcheevos
           fi
 
-          # 6. libchdr[cite: 1]
+          # 6. libchdr
           if [ ! -d "$HOME/src/libchdr/.git" ]; then
             git clone --depth 1 https://github.com/rtissera/libchdr.git $HOME/src/libchdr
           fi
 
-          # 7. Mesa / Vulkan headers[cite: 1]
+          # 7. Mesa / Vulkan headers
           if [ ! -d "$HOME/dolphinps4-build/src/mesa/.git" ]; then
             git clone --depth 1 https://gitlab.freedesktop.org/mesa/mesa.git $HOME/dolphinps4-build/src/mesa
           fi
@@ -85,12 +84,18 @@ jobs:
       - name: Run EmuSuNi Build Script
         run: |
           chmod +x scripts/*.sh
-          export OPENORBIS=$HOME/openorbis
+          export OPENORBIS="$HOME/openorbis"
           export PATH="$OPENORBIS/bin:$PATH"
-          export CC=clang
-          export CXX=clang++
+          
+          # Force explicit OpenOrbis cross-compilers so Makefiles don't fallback to host /usr/include
+          export CC="$OPENORBIS/bin/orbis-clang"
+          export CXX="$OPENORBIS/bin/orbis-clang++"
+          export AR="$OPENORBIS/bin/orbis-ar"
+          export LD="$OPENORBIS/bin/orbis-ld"
+          
           export CMAKE_C_COMPILER_LAUNCHER=ccache
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          
           bash scripts/build.sh with-saturn with-gblink with-openbor
 
       - name: Package PKG File
