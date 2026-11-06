@@ -49,40 +49,40 @@ jobs:
           mkdir -p $HOME/src
           
           # Mupen64Plus-Next (N64)
-          if [ ! -d "$HOME/src/mupen64plus-next" ]; then
+          if [ ! -d "$HOME/src/mupen64plus-next/.git" ]; then
             git clone --depth 1 https://github.com/libretro/mupen64plus-libretro-nx.git $HOME/src/mupen64plus-next
           fi
 
           # Snes9x (SNES)
-          if [ ! -d "$HOME/src/snes9x" ]; then
+          if [ ! -d "$HOME/src/snes9x/.git" ]; then
             git clone --depth 1 https://github.com/snes9xemu/snes9x.git $HOME/src/snes9x
           fi
 
           # FCEUmm (NES)
-          if [ ! -d "$HOME/src/fceumm" ]; then
+          if [ ! -d "$HOME/src/fceumm/.git" ]; then
             git clone --depth 1 https://github.com/libretro/libretro-fceumm.git $HOME/src/fceumm
           fi
 
           # Dear ImGui
-          if [ ! -d "$HOME/src/imgui" ]; then
+          if [ ! -d "$HOME/src/imgui/.git" ]; then
             git clone --depth 1 -b 1.92.2b https://github.com/ocornut/imgui.git $HOME/src/imgui || \
             git clone --depth 1 https://github.com/ocornut/imgui.git $HOME/src/imgui
           fi
 
           # rcheevos (RetroAchievements)
-          if [ ! -d "$HOME/src/rcheevos" ]; then
+          if [ ! -d "$HOME/src/rcheevos/.git" ]; then
             git clone --depth 1 -b v12.5.0 https://github.com/RetroAchievements/rcheevos.git $HOME/src/rcheevos || \
             git clone --depth 1 https://github.com/RetroAchievements/rcheevos.git $HOME/src/rcheevos
           fi
 
           # libchdr
-          if [ ! -d "$HOME/src/libchdr" ]; then
+          if [ ! -d "$HOME/src/libchdr/.git" ]; then
             git clone --depth 1 https://github.com/rtissera/libchdr.git $HOME/src/libchdr
           fi
 
       - name: Setup OpenOrbis SDK Environment
         run: |
-          if [ ! -d "$HOME/openorbis" ]; then
+          if [ ! -d "$HOME/openorbis/.git" ]; then
             git clone --depth 1 https://github.com/OpenOrbis/OpenOrbis-PS4-Toolchain.git $HOME/openorbis
           fi
           echo "OPENORBIS=$HOME/openorbis" >> $GITHUB_ENV
@@ -90,7 +90,6 @@ jobs:
       - name: Run EmuSuNi Build Script
         run: |
           chmod +x scripts/*.sh
-          # Pass ccache compiler launchers to CMake via environment or arguments if needed
           export CMAKE_C_COMPILER_LAUNCHER=ccache
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
           bash scripts/build.sh with-saturn with-gblink with-openbor
